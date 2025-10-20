@@ -1,0 +1,29 @@
+{
+  "servers": [
+    {
+      "id": "my-server-1",
+      "name": "My MCP Server",
+      "url": "https://your-server.com/api/mcp",
+      "auth": {
+        "method": "bearer",
+        "bearerToken": "your-token-here"
+      },
+      "enabled": true
+    }
+  ],
+  "llmConfigs": [
+    {
+      "id": "my-llm-1",
+      "name": "My LLM Config",
+      "provider": "snowflake",
+      "enabled": true,
+      "config": {
+        "model": "claude-3-5-sonnet",
+        "apiKey": "your-api-key-here",
+        "temperature": 0.7,
+        "maxTokens": 2000
+      }
+    }
+  ]
+}
+

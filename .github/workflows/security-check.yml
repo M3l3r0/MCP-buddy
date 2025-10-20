@@ -1,0 +1,62 @@
+name: Security Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Check for secrets in code
+      run: |
+        echo "🔍 Scanning for potential secrets..."
+        
+        # Check for common secret patterns
+        if git diff origin/main...HEAD | grep -iE "api[_-]?key|bearer[_-]?token|password|secret|private[_-]?key"; then
+          echo "⚠️  WARNING: Potential secrets found in diff!"
+          echo "Please review your changes and ensure no credentials are committed."
+          exit 1
+        fi
+        
+        # Check for JWT tokens
+        if git diff origin/main...HEAD | grep -E "eyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*"; then
+          echo "⚠️  WARNING: JWT token pattern detected!"
+          exit 1
+        fi
+        
+        # Check for long base64 strings (potential tokens)
+        if git diff origin/main...HEAD | grep -E "['\"][A-Za-z0-9+/]{40,}={0,2}['\"]"; then
+          echo "⚠️  WARNING: Long base64 string detected (potential token)!"
+          exit 1
+        fi
+        
+        echo "✅ No obvious secrets detected"
+    
+    - name: Check for sensitive URLs
+      run: |
+        echo "🔍 Checking for hardcoded URLs..."
+        
+        if git diff origin/main...HEAD | grep -E "https?://[^/]+\.snowflakecomputing\.com" | grep -v "your-account\|example\|ACCOUNT"; then
+          echo "⚠️  WARNING: Specific Snowflake URL detected!"
+          echo "Use generic placeholder URLs like 'your-account.snowflakecomputing.com'"
+          exit 1
+        fi
+        
+        echo "✅ No hardcoded sensitive URLs detected"
+    
+    - name: Security Summary
+      if: success()
+      run: |
+        echo "🎉 Security checks passed!"
+        echo "✅ No secrets detected"
+        echo "✅ No sensitive URLs found"
+        echo "✅ Safe to merge"
+
