@@ -113,7 +113,7 @@ cp config.local.json.example public/config.local.json
 # Edit with your credentials (this file is git-ignored)
 ```
 
-> 📖 See complete examples in [CONFIG_EXAMPLE.md](CONFIG_EXAMPLE.md)
+> 📖 See complete examples in [CONFIG_EXAMPLE.md](docs/CONFIG_EXAMPLE.md)
 
 ---
 
@@ -156,7 +156,7 @@ Endpoint: http://localhost:11434/api/chat
 4. Click **"Add Config"**
 5. Toggle the AI button in the header to **"AI: ON"** (green)
 
-> 📖 More examples: [CONFIG_EXAMPLE.md](CONFIG_EXAMPLE.md) | [LOCAL_CONFIG.md](LOCAL_CONFIG.md)
+> 📖 More examples: [CONFIG_EXAMPLE.md](docs/CONFIG_EXAMPLE.md) | [LOCAL_CONFIG.md](docs/LOCAL_CONFIG.md)
 
 ---
 
@@ -171,7 +171,7 @@ Endpoint: http://localhost:11434/api/chat
 
 **Never share your tokens, API keys, or endpoints in issues or PRs!** 🔐
 
-See [SECURITY.md](SECURITY.md) for more information.
+See [SECURITY.md](docs/SECURITY.md) for more information.
 
 ---
 
@@ -483,10 +483,11 @@ Special thanks to:
 
 ### Project Documentation
 
-- 📋 [Configuration Examples](CONFIG_EXAMPLE.md)
-- 🔧 [Local Development Setup](LOCAL_CONFIG.md)
+- 📋 [Configuration Examples](docs/CONFIG_EXAMPLE.md)
+- 🔧 [Local Development Setup](docs/LOCAL_CONFIG.md)
+- 🚀 [Quick Start Guide](docs/QUICKSTART.md)
 - 📝 [Changelog](CHANGELOG.md)
-- 🔒 [Security Policy](SECURITY.md)
+- 🔒 [Security Policy](docs/SECURITY.md)
 
 ---
 

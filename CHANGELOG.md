@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 📚 Documentation
 
 - Complete README with installation and configuration
-- Contributing guide (CONTRIBUTING.md)
+- Organized documentation in docs/ folder
 - MIT License
 - Changelog for version tracking
 

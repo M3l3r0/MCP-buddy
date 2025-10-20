@@ -88,3 +88,4 @@ And restart the application.
 - 📄 [CONFIG_EXAMPLE.md](CONFIG_EXAMPLE.md) - Examples of all configurations
 - 🔒 [SECURITY.md](SECURITY.md) - Security policies
 - ✅ [GITHUB_CHECKLIST.md](GITHUB_CHECKLIST.md) - Checklist before uploading to GitHub
+- 📖 [Back to README](../README.md)

@@ -200,3 +200,4 @@ git rm --cached public/config.local.json
 - See complete examples: [CONFIG_EXAMPLE.md](CONFIG_EXAMPLE.md)
 - Security: [SECURITY.md](SECURITY.md)
 - GitHub guide: [GITHUB_CHECKLIST.md](GITHUB_CHECKLIST.md)
+- 📖 [Back to README](../README.md)
