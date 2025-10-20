@@ -17,6 +17,15 @@
 
 ---
 
+## 📸 Preview
+
+<div align="center">
+  <img src=".github/assets/mcpbuddy-screenshot.png" alt="MCPbuddy Interface" width="800"/>
+  <p><i>Modern chat interface with MCP server management and AI enhancement</i></p>
+</div>
+
+---
+
 ## 📋 Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
@@ -24,7 +33,6 @@
 - [✨ Features](#-features)
 - [🏗️ Architecture](#️-architecture)
 - [🛠️ Tech Stack](#️-tech-stack)
-- [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
 ---
@@ -437,47 +445,6 @@ SERVER_PORT=3001
 
 ---
 
-## 🗺️ Roadmap
-
-### ✅ Completed Features
-
-- [x] 📊 Real-time logs panel
-- [x] ⏱️ Performance metrics
-- [x] 🔍 Technical details in messages
-- [x] 💬 Conversation management
-- [x] 🔐 Multiple authentication methods
-
-### 🚧 Upcoming Features
-
-- [ ] 💾 Export/Import configurations
-- [ ] 🔍 Search chat history
-- [ ] 📊 MCP tools explorer dashboard
-- [ ] 📂 Server resources browser
-- [ ] 🌍 Internationalization (i18n)
-- [ ] 📱 Native mobile app
-- [ ] 🔗 Chain-of-Thought reasoning
-- [ ] 🎯 Multi-agent collaboration
-- [ ] 📈 Usage metrics dashboard
-- [ ] 🎨 Customizable themes
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how you can help:
-
-1. 🍴 Fork the repository
-2. 🌿 Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. 💻 Make your changes
-4. ✅ Test thoroughly
-5. 📝 Commit your changes (`git commit -m 'Add AmazingFeature'`)
-6. 🚀 Push to the branch (`git push origin feature/AmazingFeature`)
-7. 🎉 Open a Pull Request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
----
-
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
@@ -520,7 +487,6 @@ Special thanks to:
 - 🔧 [Local Development Setup](LOCAL_CONFIG.md)
 - 📝 [Changelog](CHANGELOG.md)
 - 🔒 [Security Policy](SECURITY.md)
-- 🤝 [Contributing Guidelines](CONTRIBUTING.md)
 
 ---
 
