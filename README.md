@@ -280,11 +280,21 @@ MCPbuddy works with all major LLM providers:
 ### Request Flow (with AI Enhancement)
 
 ```mermaid
-User → Frontend → Backend → MCP Server → Raw Response
-                                    ↓
-                                LLM API → Enhanced Response
-                                    ↓
-User ← Frontend ← Backend ←─────────┘
+graph LR
+    A[User] -->|Query| B[Frontend]
+    B -->|HTTP Request| C[Backend]
+    C -->|JSON-RPC 2.0| D[MCP Server]
+    D -->|Raw Response| C
+    C -->|Process| E[LLM API]
+    E -->|Enhanced Response| C
+    C -->|Final Response| B
+    B -->|Display| A
+    
+    style A fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+    style B fill:#2196F3,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#FF9800,stroke:#333,stroke-width:2px,color:#fff
+    style D fill:#9C27B0,stroke:#333,stroke-width:2px,color:#fff
+    style E fill:#E91E63,stroke:#333,stroke-width:2px,color:#fff
 ```
 
 **Key Components:**
