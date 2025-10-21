@@ -2,7 +2,7 @@
 
 # 🤖 MCPbuddy
 
-### *Your intelligent companion for MCP servers with AI-powered enhancements*
+### *Your intelligent local MCP manager for MCP servers*
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
