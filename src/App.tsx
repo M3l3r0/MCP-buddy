@@ -27,31 +27,13 @@ function App() {
   // Load servers from localStorage on mount
   useEffect(() => {
     const loadServers = async () => {
-      // First, try to load from config.local.json (for local development)
-      try {
-        const response = await fetch('/config.local.json');
-        if (response.ok) {
-          const localConfig = await response.json();
-          if (localConfig.servers && localConfig.servers.length > 0) {
-            console.log('✅ Loaded configuration from config.local.json');
-            setServers(localConfig.servers);
-            const activeServerFromConfig = localConfig.servers.find((s: MCPServer) => s.enabled) || localConfig.servers[0];
-            setActiveServer(activeServerFromConfig);
-            // Also save to localStorage for consistency
-            localStorage.setItem('mcpServers', JSON.stringify(localConfig.servers));
-            return; // Exit early if local config loaded successfully
-          }
-        }
-      } catch (error) {
-        // config.local.json doesn't exist or failed to load - this is normal for new users
-        console.log('ℹ️  No local config found (normal for new users)');
-      }
-
-      // Fallback to localStorage
+      // First, check if we have servers in localStorage (user's saved changes have priority)
       const savedServers = localStorage.getItem('mcpServers');
       if (savedServers) {
+        // User has saved servers in localStorage - use those (they have priority)
         try {
           const parsed = JSON.parse(savedServers);
+          console.log('✅ Loaded servers from localStorage (user preferences)');
           // Migrate old format to new format if needed
           const migratedServers = parsed.map((server: any) => {
             if (server.headers) {
@@ -73,13 +55,34 @@ function App() {
           if (migratedServers.length > 0 && migratedServers[0].enabled) {
             setActiveServer(migratedServers[0]);
           }
+          return; // Exit early - we have user's saved preferences
         } catch (error) {
-          console.error('Error loading servers:', error);
+          console.error('Error loading servers from localStorage:', error);
         }
-      } else {
-        // No servers configured - user will need to add one through the UI
-        console.log('ℹ️  No MCP servers configured. Please add a server through the Server Manager.');
       }
+
+      // Only load from config.local.json if localStorage is empty (first time setup)
+      try {
+        const response = await fetch('/config.local.json');
+        if (response.ok) {
+          const localConfig = await response.json();
+          if (localConfig.servers && localConfig.servers.length > 0) {
+            console.log('✅ Loaded initial configuration from config.local.json');
+            setServers(localConfig.servers);
+            const activeServerFromConfig = localConfig.servers.find((s: MCPServer) => s.enabled) || localConfig.servers[0];
+            setActiveServer(activeServerFromConfig);
+            // Save to localStorage so future edits persist
+            localStorage.setItem('mcpServers', JSON.stringify(localConfig.servers));
+            return;
+          }
+        }
+      } catch (error) {
+        // config.local.json doesn't exist or failed to load - this is normal for new users
+        console.log('ℹ️  No local config found (normal for new users)');
+      }
+
+      // No configuration found anywhere
+      console.log('ℹ️  No MCP servers configured. Please add a server through the Server Manager.');
     };
 
     loadServers();
@@ -88,21 +91,39 @@ function App() {
   // Load LLM configs from localStorage
   useEffect(() => {
     const loadLLMConfigs = async () => {
-      // First, try to load from config.local.json (for local development)
+      // First, check localStorage (user's saved changes have priority)
+      const savedLLMConfigs = localStorage.getItem('llmConfigs');
+      if (savedLLMConfigs) {
+        // User has saved LLM configs in localStorage - use those
+        try {
+          const parsed = JSON.parse(savedLLMConfigs);
+          console.log('✅ Loaded LLM configs from localStorage (user preferences)');
+          setLLMConfigs(parsed);
+          const activeConfig = parsed.find((c: LLMConfig) => c.enabled);
+          if (activeConfig) {
+            setActiveLLM(activeConfig);
+          }
+          return; // Exit early - we have user's saved preferences
+        } catch (error) {
+          console.error('Error loading LLM configs from localStorage:', error);
+        }
+      }
+
+      // Only load from config.local.json if localStorage is empty (first time setup)
       try {
         const response = await fetch('/config.local.json');
         if (response.ok) {
           const localConfig = await response.json();
           if (localConfig.llmConfigs && localConfig.llmConfigs.length > 0) {
-            console.log('✅ Loaded LLM configuration from config.local.json');
+            console.log('✅ Loaded initial LLM configuration from config.local.json');
             setLLMConfigs(localConfig.llmConfigs);
             const activeConfig = localConfig.llmConfigs.find((c: LLMConfig) => c.enabled);
             if (activeConfig) {
               setActiveLLM(activeConfig);
             }
-            // Also save to localStorage for consistency
+            // Save to localStorage so future edits persist
             localStorage.setItem('llmConfigs', JSON.stringify(localConfig.llmConfigs));
-            return; // Exit early if local config loaded successfully
+            return;
           }
         }
       } catch (error) {
@@ -110,19 +131,8 @@ function App() {
         console.log('ℹ️  No local LLM config found (normal for new users)');
       }
 
-      // Fallback to localStorage
-      const savedLLMConfigs = localStorage.getItem('llmConfigs');
-      if (savedLLMConfigs) {
-        const parsed = JSON.parse(savedLLMConfigs);
-        setLLMConfigs(parsed);
-        const activeConfig = parsed.find((c: LLMConfig) => c.enabled);
-        if (activeConfig) {
-          setActiveLLM(activeConfig);
-        }
-      } else {
-        // No LLM configs - user will need to add one through the UI
-        console.log('ℹ️  No LLM configurations found. Add one through the LLM Config Manager if needed.');
-      }
+      // No configuration found anywhere
+      console.log('ℹ️  No LLM configurations found. Add one through the LLM Config Manager if needed.');
     };
 
     loadLLMConfigs();
