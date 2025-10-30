@@ -54,6 +54,7 @@ export interface Conversation {
   createdAt: Date;
   updatedAt: Date;
   llmEnabled: boolean;
+  isAutoCreated?: boolean; // Para distinguir conversaciones auto-creadas vs creadas manualmente
 }
 
 export interface Tool {

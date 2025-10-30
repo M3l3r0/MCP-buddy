@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Chat from './components/Chat';
 import ServerManager from './components/ServerManager';
 import LLMConfigManager from './components/LLMConfigManager';
@@ -23,6 +23,9 @@ function App() {
   
   // Logs state
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  
+  // Track if initial load is complete
+  const initialLoadComplete = useRef(false);
 
   // Load servers from localStorage on mount
   useEffect(() => {
@@ -52,8 +55,12 @@ function App() {
             return server;
           });
           setServers(migratedServers);
-          if (migratedServers.length > 0 && migratedServers[0].enabled) {
-            setActiveServer(migratedServers[0]);
+          
+          // Set active server
+          const enabledServer = migratedServers.find((s: MCPServer) => s.enabled);
+          const serverToActivate = enabledServer || migratedServers[0];
+          if (serverToActivate) {
+            setActiveServer(serverToActivate);
           }
           return; // Exit early - we have user's saved preferences
         } catch (error) {
@@ -161,6 +168,33 @@ function App() {
     }
   }, []);
 
+  // Auto-create a new conversation when app loads if there's an active server but no active conversation
+  useEffect(() => {
+    // Only run this once after initial load is complete
+    if (initialLoadComplete.current) return;
+    
+    // Wait for servers to load and check if we need to create a default conversation
+    // This creates a new conversation when:
+    // 1. There's an active server
+    // 2. There's no active conversation selected (either no conversations exist or user hasn't selected one)
+    if (activeServer && !activeConversation) {
+      console.log('📝 Auto-creating new conversation for ready-to-use chat');
+      const newConversation: Conversation = {
+        id: Date.now().toString(),
+        title: `New Chat - ${new Date().toLocaleDateString()}`,
+        serverId: activeServer.id,
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        llmEnabled: activeLLM !== null,
+        isAutoCreated: true, // Marcar como auto-creada para cambiar el título al primer mensaje
+      };
+      setConversations(prev => [newConversation, ...prev]);
+      setActiveConversation(newConversation);
+      initialLoadComplete.current = true;
+    }
+  }, [activeServer, activeConversation, activeLLM]);
+
   // Save servers to localStorage whenever they change
   useEffect(() => {
     if (servers.length > 0) {
@@ -183,8 +217,14 @@ function App() {
   }, [conversations]);
 
   // Update active conversation's messages when they change
+  // We use JSON.stringify to detect deep changes in the messages array
   useEffect(() => {
-    if (activeConversation) {
+    if (activeConversation && activeConversation.messages.length > 0) {
+      console.log('💾 Syncing conversation to conversations array:', {
+        id: activeConversation.id,
+        title: activeConversation.title,
+        messageCount: activeConversation.messages.length
+      });
       setConversations(prev => 
         prev.map(conv => 
           conv.id === activeConversation.id 
@@ -193,7 +233,7 @@ function App() {
         )
       );
     }
-  }, [activeConversation?.messages]);
+  }, [activeConversation?.id, activeConversation?.messages?.length, activeConversation?.title]);
 
   const handleNewConversation = () => {
     if (!activeServer) {
@@ -209,6 +249,7 @@ function App() {
       createdAt: new Date(),
       updatedAt: new Date(),
       llmEnabled: activeLLM !== null,
+      isAutoCreated: false, // Creada manualmente, mantener título
     };
 
     setConversations(prev => [newConversation, ...prev]);
@@ -243,6 +284,13 @@ function App() {
   };
 
   const handleAddMessage = (message: Message) => {
+    console.log('📝 Adding message:', {
+      role: message.role,
+      content: message.content.substring(0, 50) + '...',
+      activeConversationId: activeConversation?.id,
+      currentMessageCount: activeConversation?.messages.length || 0
+    });
+
     // Si no hay conversación activa, crear una nueva automáticamente
     if (!activeConversation) {
       if (!activeServer) {
@@ -260,30 +308,44 @@ function App() {
         createdAt: new Date(),
         updatedAt: new Date(),
         llmEnabled: activeLLM !== null,
+        isAutoCreated: false, // No es auto-creada porque se creó al enviar un mensaje
       };
       
       setConversations(prev => [newConversation, ...prev]);
       setActiveConversation(newConversation);
-      console.log('✅ Auto-created new conversation');
+      console.log('✅ Auto-created new conversation with', newConversation.messages.length, 'messages');
       return;
     }
 
-    const updatedConversation = {
-      ...activeConversation,
-      messages: [...activeConversation.messages, message],
-      updatedAt: new Date(),
-    };
+    // Usar forma funcional para asegurar que tenemos el estado más reciente
+    setActiveConversation(prevConversation => {
+      if (!prevConversation) return prevConversation;
 
-    setActiveConversation(updatedConversation);
+      const updatedConversation = {
+        ...prevConversation,
+        messages: [...prevConversation.messages, message],
+        updatedAt: new Date(),
+      };
 
-    // Auto-rename conversation based on first message
-    if (activeConversation.messages.length === 0 && message.role === 'user') {
-      const title = message.content.length > 50 
-        ? message.content.substring(0, 50) + '...'
-        : message.content;
-      updatedConversation.title = title;
-      setActiveConversation(updatedConversation);
-    }
+      console.log('📥 Updating conversation:', {
+        id: updatedConversation.id,
+        previousMessageCount: prevConversation.messages.length,
+        newMessageCount: updatedConversation.messages.length,
+        allMessages: updatedConversation.messages.map(m => `${m.role}: ${m.content.substring(0, 20)}...`)
+      });
+
+      // Auto-rename conversation based on first user message ONLY if it was auto-created
+      if (prevConversation.isAutoCreated && prevConversation.messages.length === 0 && message.role === 'user') {
+        const title = message.content.length > 50 
+          ? message.content.substring(0, 50) + '...'
+          : message.content;
+        updatedConversation.title = title;
+        updatedConversation.isAutoCreated = false; // Ya no es auto-creada después de cambiar el título
+        console.log('📝 Auto-renamed conversation to:', title);
+      }
+
+      return updatedConversation;
+    });
   };
 
   const handleClearChat = () => {
@@ -352,6 +414,7 @@ function App() {
         <Chat
           activeServer={activeServer}
           activeLLM={activeLLM}
+          allServers={servers}
           messages={activeConversation?.messages || []}
           onAddMessage={handleAddMessage}
           onAddLog={handleAddLog}
