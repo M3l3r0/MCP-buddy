@@ -2,13 +2,13 @@
 
 # 🤖 MCPbuddy
 
-### *AI orchestrator for multiple MCP servers*
+### *Your local MCP Server manager with AI orchestration*
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-**Chat interface with AI that automatically decides which MCP servers and tools to use**
+**Manage multiple MCP servers locally • Select manually or let AI orchestrate automatically**
 
 </div>
 
@@ -29,28 +29,36 @@ npm run dev
 
 ## 🎯 What is it?
 
-MCPbuddy connects to multiple **MCP (Model Context Protocol) servers**. When you ask a question, an **LLM intelligently decides** which servers and tools to query, then synthesizes all responses into one answer.
+**MCPbuddy is a local MCP Server manager** that runs entirely on your machine. Manage all your MCP (Model Context Protocol) servers in one place:
 
-**Think**: ChatGPT interface + your MCP servers + AI orchestration
+- 🎯 **Manual mode**: Select which server to use
+- 🎭 **AI Orchestration**: Let an LLM automatically decide which servers and tools to query
+
+**Think**: Local server manager + ChatGPT interface + Optional AI orchestration
 
 ---
 
 ## ✨ Key Features
 
-### 🎭 AI Orchestration
-Ask anything → LLM picks the right servers/tools → Executes in parallel → One coherent answer
+### 🏠 100% Local
+Everything runs on your machine. Your data stays with you.
 
-### 💬 Modern Chat
-- ⚡ ChatGPT-style typing animation
-- 💾 Persistent conversation history
-- 🏷️ Auto-titles from first message
+### 🎯 Two Modes
+- **Manual**: Pick a server from your list
+- **AI Orchestration**: LLM automatically selects from your enabled servers
 
-### 🔌 Multi-Server
-- Connect multiple MCP servers
-- Works with Snowflake, custom APIs, any MCP-compatible endpoint
+### 🔌 MCP Server Management
+- Add/edit/remove servers through UI
 - Multiple auth methods: Bearer, API Key, OAuth, Basic
+- Works with Snowflake, custom APIs, any MCP endpoint
 
-### 🤖 LLM Support
+### 💬 Modern Chat Interface
+- ⚡ ChatGPT-style typing animation
+- 💾 Persistent conversations
+- 🏷️ Auto-titles from first message
+- 📊 Real-time logs of all operations
+
+### 🤖 LLM Support (Optional)
 Snowflake Cortex • OpenAI • Anthropic • Ollama • Custom APIs
 
 ---
@@ -78,12 +86,15 @@ Model: llama3-70b / gpt-4 / claude-3-5-sonnet
 API Key: your-key
 ```
 
-### 3. Chat!
+### 3. Choose Your Mode
 
-**Without LLM**: Select one server, get raw responses  
-**With LLM**: 
-- One server = AI-enhanced responses
-- Multiple servers = 🎭 **Orchestration mode** (AI picks servers automatically)
+**🎯 Manual Mode** (no LLM needed):
+- Select a server from sidebar
+- Chat directly with that server
+
+**🎭 AI Orchestration** (LLM required):
+- Enable multiple servers (toggle them ON)
+- AI automatically picks from enabled servers only
 
 ---
 
@@ -92,16 +103,18 @@ API Key: your-key
 ```
 Your Question
     ↓
-🧠 LLM analyzes → Decides which servers/tools
+🧠 LLM analyzes enabled servers → Decides which to use
     ↓
-⚡ Executes in parallel
+⚡ Executes chosen tools in parallel
     ↓
-🎨 LLM combines results
+🎨 LLM combines all results
     ↓
-💬 Single answer
+💬 Single, coherent answer
 ```
 
-**Example**: *"Tell me about X and Y"* → AI queries relevant servers → Synthesized response
+**Note**: Only enabled servers (toggled ON) are available to the orchestrator.
+
+**Example**: *"Tell me about X and Y"* → AI picks relevant enabled servers → Synthesized response
 
 ---
 
@@ -131,15 +144,17 @@ React • TypeScript • Node.js • Express • Tailwind • Vite
 - Check LLM API key
 
 **No orchestration?**
-- Need **LLM enabled** + **multiple servers enabled**
+- Need **LLM enabled** + **multiple servers toggled ON** (enabled)
 
 ---
 
 ## 🔐 Security
 
-- ✅ No hardcoded credentials
-- ✅ Local storage only
-- ✅ Git-ignores secrets (`*.env`, `*credentials*`, `*-local.json`)
+- ✅ **Runs 100% locally** on your machine
+- ✅ **No external tracking** - your data stays with you
+- ✅ **No hardcoded credentials** - you configure your own
+- ✅ **Browser storage only** - nothing sent to our servers (we don't have any!)
+- ✅ Git-ignores all secrets
 
 **Never commit API keys or tokens!**
 
