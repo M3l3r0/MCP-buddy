@@ -386,6 +386,11 @@ app.post('/api/chat', async (req, res) => {
         ) || tools[0];
 
         console.log(`🎯 Using tool: ${searchTool.name}`);
+        console.log(`📋 Tool schema:`, JSON.stringify(searchTool.inputSchema, null, 2));
+
+        // Determine the correct argument name from the tool's input schema
+        const argName = getPrimaryArgumentName(searchTool.inputSchema);
+        console.log(`📤 Using argument name: "${argName}" with value: "${message}"`);
 
         // Call the tool with the user's message
         const toolCallRequest = {
@@ -394,7 +399,7 @@ app.post('/api/chat', async (req, res) => {
           params: {
             name: searchTool.name,
             arguments: {
-              query: message,
+              [argName]: message,
             },
           },
           id: Date.now() + 1,
@@ -688,6 +693,75 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Helper function to determine the primary argument name from a tool's schema
+function getPrimaryArgumentName(inputSchema) {
+  const possibleArgNames = ['text', 'query', 'message', 'input', 'prompt', 'question'];
+  let argName = 'query'; // default
+  
+  if (!inputSchema) {
+    console.log('⚠️  No inputSchema provided, using default: query');
+    return argName;
+  }
+  
+  // Handle both 'properties' and direct schema format
+  const properties = inputSchema.properties || inputSchema;
+  
+  if (properties && typeof properties === 'object') {
+    const schemaProps = Object.keys(properties);
+    console.log('📋 Available schema properties:', schemaProps);
+    
+    // Check for required fields first (case-insensitive)
+    const required = inputSchema.required || [];
+    if (required.length > 0) {
+      console.log('📋 Required fields:', required);
+      for (const req of required) {
+        // Check if this required field matches one of our possible names (case-insensitive)
+        const lowerReq = req.toLowerCase();
+        if (possibleArgNames.includes(lowerReq)) {
+          argName = req; // Use the exact casing from the schema
+          console.log(`✅ Found required text argument: ${argName}`);
+          return argName;
+        }
+        // Also check if it's a string type
+        if (properties[req]?.type === 'string') {
+          argName = req;
+          console.log(`✅ Found required string argument: ${argName}`);
+          return argName;
+        }
+      }
+    }
+    
+    // If no required field found, check for common text parameter names (case-insensitive)
+    for (const name of possibleArgNames) {
+      // Check exact match first
+      if (schemaProps.includes(name)) {
+        argName = name;
+        console.log(`✅ Found exact match argument: ${argName}`);
+        return argName;
+      }
+      // Check case-insensitive match
+      const matchingProp = schemaProps.find(prop => prop.toLowerCase() === name);
+      if (matchingProp) {
+        argName = matchingProp; // Use the exact casing from the schema
+        console.log(`✅ Found case-insensitive match argument: ${argName}`);
+        return argName;
+      }
+    }
+    
+    // Last resort: use the first string property
+    for (const prop of schemaProps) {
+      if (properties[prop]?.type === 'string') {
+        argName = prop;
+        console.log(`✅ Using first string property: ${argName}`);
+        return argName;
+      }
+    }
+  }
+  
+  console.log(`⚠️  No suitable argument found, using default: ${argName}`);
+  return argName;
+}
+
 // Helper function to get all tools from all enabled servers
 async function getAllAvailableTools(servers) {
   const toolsByServer = [];
@@ -719,11 +793,15 @@ async function getAllAvailableTools(servers) {
           serverId: server.id,
           serverName: server.name,
           serverUrl: server.url,
-          tools: tools.map(tool => ({
-            name: tool.name,
-            description: tool.description || '',
-            inputSchema: tool.inputSchema || {}
-          }))
+          tools: tools.map(tool => {
+            const primaryArg = getPrimaryArgumentName(tool.inputSchema);
+            return {
+              name: tool.name,
+              description: tool.description || '',
+              inputSchema: tool.inputSchema || {},
+              primaryArgumentName: primaryArg
+            };
+          })
         });
       }
     } catch (error) {
@@ -743,7 +821,7 @@ async function getOrchestrationDecision(userMessage, toolsByServer, llmConfig, p
   
   const toolsDescription = toolsByServer.map(serverTools => {
     const toolsList = serverTools.tools.map(t => 
-      `  - ${t.name}: ${t.description || 'No description'}`
+      `  - ${t.name}: ${t.description || 'No description'} [primary argument: "${t.primaryArgumentName}"]`
     ).join('\n');
     
     return `Server: ${serverTools.serverName} (ID: ${serverTools.serverId})\nTools:\n${toolsList}`;
@@ -775,7 +853,7 @@ Respond ONLY with a valid JSON object in this exact format:
       "serverName": "server_name_here",
       "toolName": "tool_name_here",
       "arguments": {
-        "query": "the search query or parameters"
+        "<primary_argument_name>": "the search query or parameters"
       }
     }
   ],
@@ -785,8 +863,8 @@ Respond ONLY with a valid JSON object in this exact format:
 IMPORTANT:
 - If you need to call multiple tools, include them all in the toolCalls array
 - Always use the exact serverId and toolName from the available tools
+- Use the PRIMARY ARGUMENT NAME shown in brackets for each tool (e.g., "text", "query", etc.) - this is CRITICAL!
 - Set needsMoreInfo to false unless you truly cannot answer without additional tool calls
-- The arguments should match what the tool expects (usually a "query" field)
 - Be comprehensive in your first attempt - select ALL relevant tools at once
 - Even if the results might be partial, we can still provide a useful answer`;
 
@@ -977,18 +1055,45 @@ IMPORTANT:
 }
 
 // Helper function to execute a tool call
-async function executeToolCall(serverId, serverName, serverUrl, toolName, toolArguments, serverAuth) {
+async function executeToolCall(serverId, serverName, serverUrl, toolName, toolArguments, serverAuth, toolSchema = null) {
   console.log(`\n🔧 Executing ${toolName} on ${serverName}...`);
+  console.log(`📋 Original arguments:`, JSON.stringify(toolArguments));
   
   const startTime = Date.now();
   const headers = await buildAuthHeaders({ id: serverId, auth: serverAuth, url: serverUrl });
+  
+  // If we have tool schema, ensure we're using the correct argument name
+  let adjustedArguments = { ...toolArguments };
+  
+  if (toolSchema && toolSchema.inputSchema) {
+    const primaryArg = getPrimaryArgumentName(toolSchema.inputSchema);
+    console.log(`📋 Tool expects primary argument: "${primaryArg}"`);
+    
+    // Check if we have a text value in a different argument name that needs to be remapped
+    const possibleArgNames = ['text', 'query', 'message', 'input', 'prompt', 'question'];
+    const hasCorrectArg = adjustedArguments[primaryArg] !== undefined;
+    
+    if (!hasCorrectArg) {
+      // Find the value from another argument name and remap it
+      for (const name of possibleArgNames) {
+        if (adjustedArguments[name] !== undefined && name !== primaryArg) {
+          console.log(`🔄 Remapping argument "${name}" to "${primaryArg}"`);
+          adjustedArguments[primaryArg] = adjustedArguments[name];
+          delete adjustedArguments[name];
+          break;
+        }
+      }
+    }
+  }
+  
+  console.log(`📤 Adjusted arguments:`, JSON.stringify(adjustedArguments));
   
   const toolCallRequest = {
     jsonrpc: '2.0',
     method: 'tools/call',
     params: {
       name: toolName,
-      arguments: toolArguments,
+      arguments: adjustedArguments,
     },
     id: Date.now(),
   };
@@ -1311,13 +1416,17 @@ app.post('/api/orchestrated-chat', async (req, res) => {
 
         const server = servers.find(s => s.id === toolCall.serverId);
         
+        // Find the tool schema to ensure correct argument names
+        const toolSchema = serverInfo.tools.find(t => t.name === toolCall.toolName);
+        
         return executeToolCall(
           toolCall.serverId,
           toolCall.serverName,
           serverInfo.serverUrl,
           toolCall.toolName,
           toolCall.arguments,
-          server.auth
+          server.auth,
+          toolSchema
         );
       });
 
