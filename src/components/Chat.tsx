@@ -232,7 +232,7 @@ export default function Chat({ activeServer, activeLLM, allServers, messages, on
         role: 'assistant',
         content: response.data.response,
         timestamp: new Date(),
-        serverId: activeServer.id,
+        serverId: activeServer?.id || 'orchestrated',
         metadata: response.data.metadata,
       };
 
